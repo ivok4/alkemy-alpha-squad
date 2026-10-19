@@ -14,7 +14,8 @@ public class VirtualCardConfiguration : IEntityTypeConfiguration<VirtualCardEnti
         builder.Property(e => e.CardNumber).HasMaxLength(16).IsRequired();
         builder.Property(e => e.ExpirationDate).HasMaxLength(5).IsRequired();
         builder.Property(e => e.Cvv).HasMaxLength(3).IsRequired();
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        //builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasOne(e => e.User)
             .WithMany()

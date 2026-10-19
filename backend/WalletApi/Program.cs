@@ -67,9 +67,39 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
 // Database context
+// builder.Services.AddDbContext<WalletContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+// );
+
+
+var provider = builder.Configuration["DatabaseProvider"] ?? "Supabase";
+
 builder.Services.AddDbContext<WalletContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+{
+    switch (provider.ToLowerInvariant())
+    {
+        case "supabase":
+        case "postgresql":
+        case "postgres":
+            options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseConnection")
+                ?? builder.Configuration.GetConnectionString("DefaultConnection"));
+            break;
+
+        case "sqlserver":
+            options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection")
+                ?? builder.Configuration.GetConnectionString("DefaultConnection"));
+            break;
+
+        case "mysql":
+            var mySqlConn = builder.Configuration.GetConnectionString("MySqlConnection")
+                ?? builder.Configuration.GetConnectionString("DefaultConnection");
+            // options.UseMySql(mySqlConn, ServerVersion.AutoDetect(mySqlConn));
+            break;
+
+        default:
+            throw new InvalidOperationException($"Proveedor de base de datos no soportado: '{provider}'.");
+    }
+});
 
 // ASP.NET Core Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
@@ -213,51 +243,63 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<WalletContext>();
-        await context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (
-                SELECT 1 FROM sys.columns 
-                WHERE object_id = OBJECT_ID(N'[dbo].[AspNetUsers]') 
-                AND name = 'DebeCambiarPassword'
-            )
-            BEGIN
-                ALTER TABLE [dbo].[AspNetUsers] ADD [DebeCambiarPassword] bit NOT NULL CONSTRAINT DF_AspNetUsers_DebeCambiarPassword DEFAULT 0;
-            END
 
-            IF NOT EXISTS (
-                SELECT 1 FROM sys.tables 
-                WHERE object_id = OBJECT_ID(N'[dbo].[Notifications]')
-            )
-            BEGIN
-                CREATE TABLE [dbo].[Notifications] (
-                    [Id] int NOT NULL IDENTITY(1,1),
-                    [UserId] int NOT NULL,
-                    [Title] nvarchar(100) NOT NULL,
-                    [Message] nvarchar(500) NOT NULL,
-                    [Type] nvarchar(50) NOT NULL,
-                    [IsRead] bit NOT NULL DEFAULT 0,
-                    [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-                    [ReferenceId] int NULL,
-                    CONSTRAINT [PK_Notifications] PRIMARY KEY ([Id]),
-                    CONSTRAINT [FK_Notifications_Users] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
-                );
+        if (context.Database.IsSqlServer())
+        {
+            // Parche específico de SQL Server
+            await context.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[AspNetUsers]') AND name = 'DebeCambiarPassword')
+                BEGIN
+                    ALTER TABLE [dbo].[AspNetUsers] ADD [DebeCambiarPassword] bit NOT NULL CONSTRAINT DF_AspNetUsers_DebeCambiarPassword DEFAULT 0;
+                END
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE object_id = OBJECT_ID(N'[dbo].[Notifications]'))
+                BEGIN
+                    CREATE TABLE [dbo].[Notifications] (
+                        [Id] int NOT NULL IDENTITY(1,1),
+                        [UserId] int NOT NULL,
+                        [Title] nvarchar(100) NOT NULL,
+                        [Message] nvarchar(500) NOT NULL,
+                        [Type] nvarchar(50) NOT NULL,
+                        [IsRead] bit NOT NULL DEFAULT 0,
+                        [CreatedAt] datetime2 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        [ReferenceId] int NULL,
+                        CONSTRAINT [PK_Notifications] PRIMARY KEY ([Id]),
+                        CONSTRAINT [FK_Notifications_Users] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+                    );
+                    CREATE INDEX [IX_Notifications_UserId_IsRead] ON [dbo].[Notifications] ([UserId], [IsRead]);
+                    CREATE INDEX [IX_Notifications_CreatedAt] ON [dbo].[Notifications] ([CreatedAt]);
+                END
+            ");
+        }
+        else if (context.Database.IsNpgsql())
+        {
+            // Para Supabase: Asegura que el esquema completo (tablas Identity y de negocio) exista
+            await context.Database.EnsureCreatedAsync();
+        }
 
-                CREATE INDEX [IX_Notifications_UserId_IsRead] ON [dbo].[Notifications] ([UserId], [IsRead]);
-                CREATE INDEX [IX_Notifications_CreatedAt] ON [dbo].[Notifications] ([CreatedAt]);
-            END
-        ");
-
+        // Seeding común para AMBOS proveedores (Crea Tipos de Doc, Roles, Admin y Cuenta)
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
         var userManager = services.GetRequiredService<UserManager<User>>();
         var configuration = services.GetRequiredService<IConfiguration>();
         var accountService = services.GetRequiredService<IAccountService>();
 
-        await DbSeeder.SeedAsync(roleManager, userManager, configuration, accountService, logger);
+        await DbSeeder.SeedAsync(context, roleManager, userManager, configuration, accountService, logger);
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Ocurrió un error durante el seeding de la base de datos.");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"\n[SEEDER EXCEPTION] Error general: {ex.Message}");
+        var inner = ex.InnerException;
+        while (inner != null)
+        {
+            Console.WriteLine($"[SEEDER CAUSA INTERNA] {inner.Message}");
+            inner = inner.InnerException;
+        }
+        Console.ResetColor();
+        logger.LogError(ex, "Ocurrió un error durante la inicialización/seeding de la base de datos.");
     }
 }
+
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 

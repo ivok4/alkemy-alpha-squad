@@ -15,7 +15,8 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(e => e.Currency).HasMaxLength(10).HasDefaultValue("ARS");
         builder.Property(e => e.Alias).HasMaxLength(100).IsRequired();
         builder.Property(e => e.Cvu).HasMaxLength(22).IsUnicode(false).IsRequired();
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        //builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasIndex(e => e.Alias, "UQ_Accounts_Alias").IsUnique();
         builder.HasIndex(e => e.Cvu, "UQ_Accounts_Cvu").IsUnique();

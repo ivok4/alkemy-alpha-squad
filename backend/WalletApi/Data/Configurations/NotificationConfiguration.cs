@@ -14,7 +14,8 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(e => e.Title).HasMaxLength(100).IsRequired();
         builder.Property(e => e.Message).HasMaxLength(500).IsRequired();
         builder.Property(e => e.Type).HasMaxLength(50).IsRequired();
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        //builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasOne(d => d.User)
             .WithMany()

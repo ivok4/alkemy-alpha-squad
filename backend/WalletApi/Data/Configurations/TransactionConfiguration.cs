@@ -35,6 +35,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasMaxLength(20)
             .IsRequired();
         builder.Property(e => e.Description).HasMaxLength(255);
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        //builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
     }
 }

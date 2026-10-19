@@ -11,7 +11,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.FirstName).HasMaxLength(50).IsRequired();
         builder.Property(e => e.LastName).HasMaxLength(50).IsRequired();
         builder.Property(e => e.DocumentNumber).HasMaxLength(30).IsUnicode(false).IsRequired();
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        //builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasIndex(e => new { e.DocumentTypeId, e.DocumentNumber }, "UQ_User_DocumentType_Number").IsUnique();
 

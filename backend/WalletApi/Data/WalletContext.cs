@@ -11,6 +11,7 @@ public class WalletContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
     }
 
+
     public virtual DbSet<Account> Accounts { get; set; } = null!;
     public virtual DbSet<DocumentType> DocumentTypes { get; set; } = null!;
     public virtual DbSet<Transaction> Transactions { get; set; } = null!;
