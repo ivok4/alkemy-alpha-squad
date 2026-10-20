@@ -153,7 +153,7 @@ function UsersList() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5016/api/User?pagina=${pageToFetch}&porPagina=${porPagina}`,
+        `https://digitalars.onrender.com/api/User?pagina=${pageToFetch}&porPagina=${porPagina}`,
         {
           method: "GET",
           headers: {

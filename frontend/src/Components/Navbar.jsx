@@ -52,7 +52,7 @@ function Navbar() {
 
   async function handleLogout() {
     try {
-      const response = await fetch("http://localhost:5016/api/auth/logout", {
+      const response = await fetch("https://digitalars.onrender.com/api/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

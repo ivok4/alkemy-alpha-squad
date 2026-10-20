@@ -46,7 +46,7 @@ function CreateUserModal({ open, onClose, onSuccess }) {
       // Fetch document types
       const fetchDocTypes = async () => {
         try {
-          const res = await fetch("http://localhost:5016/api/auth/document-types");
+          const res = await fetch("https://digitalars.onrender.com/api/auth/document-types");
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
@@ -138,7 +138,7 @@ function CreateUserModal({ open, onClose, onSuccess }) {
       setApiError(null);
       const token = localStorage.getItem("token");
 
-      const response = await fetch("http://localhost:5016/api/User", {
+      const response = await fetch("https://digitalars.onrender.com/api/User", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

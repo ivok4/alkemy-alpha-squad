@@ -36,7 +36,7 @@ function TransactionHistory({
           params.append("tipo", filters.type);
 
         const response = await fetch(
-          `http://localhost:5016/api/Transactions?${params.toString()}`,
+          `https://digitalars.onrender.com/api/Transactions?${params.toString()}`,
           {
             method: "GET",
             headers: {
