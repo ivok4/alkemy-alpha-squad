@@ -1,35 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 /* ─── Design Tokens ─────────────────────────────────────────────────── */
 :root {
-  --color-emerald-50:  #ecfdf5;
-  --color-emerald-100: #d1fae5;
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
-  --color-emerald-700: #047857;
-  --color-emerald-900: #064e3b;
+  /* Color Palette — Sky Blue Accent (from portfolio) */
+  --color-sky-50:  #f0f9ff;
+  --color-sky-100: #e0f2fe;
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
 
-  --color-space-900: #020617;
-  --color-space-800: #0f172a;
-  --color-space-700: #1e293b;
+  /* Dark Background */
+  --color-bg:      #030303;
+  --color-bg-elevated: rgba(13, 17, 24, 0.92);
 
-  --color-white: #ffffff;
-  --color-gray-100: #f1f5f9;
-  --color-gray-200: #e2e8f0;
-  --color-gray-400: #94a3b8;
-  --color-gray-600: #475569;
+  /* Text */
+  --color-text:        #f3f4f6;
+  --color-text-secondary: #9ca3af;
 
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Glassmorphism Cards (Reduced transparency for crisp readability) */
+  --card-bg:           rgba(13, 17, 24, 0.88);
+  --card-border:       rgba(255, 255, 255, 0.08);
+  --card-hover-bg:     rgba(18, 24, 35, 0.94);
+  --card-hover-border: rgba(56, 189, 248, 0.35);
 
+  /* Container (elevated glass panels) */
+  --container-bg:      rgba(13, 17, 24, 0.92);
+  --container-border:  rgba(255, 255, 255, 0.09);
+  --container-shadow:  0 20px 50px rgba(0, 0, 0, 0.6);
+
+  /* Accent Glow */
+  --accent-glow:   rgba(56, 189, 248, 0.15);
+  --shadow-glow:   0 0 40px rgba(56, 189, 248, 0.25);
+  --shadow-card:   0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 4px 20px rgba(56, 189, 248, 0.4);
+
+  /* Transaction colors */
+  --color-success: #10b981;
+  --color-danger:  #ef4444;
+
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Radii */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 32px;
 
-  --shadow-glow-emerald: 0 0 40px rgba(16, 185, 129, 0.35);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --shadow-button: 0 4px 20px rgba(16, 185, 129, 0.5);
+  /* Smooth transition */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────────── */
@@ -46,10 +68,11 @@ html {
 html, body {
   min-height: 100vh;
   font-family: var(--font-family);
-  background-color: #f8fafc;
-  color: var(--color-space-700);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
 #root {
@@ -64,15 +87,77 @@ html, body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-space-800);
+  background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-emerald-600);
+  background: var(--color-sky-500);
   border-radius: 3px;
 }
 
 /* ─── Selection ─────────────────────────────────────────────────────── */
 ::selection {
-  background: var(--color-emerald-500);
-  color: var(--color-white);
+  background: var(--color-sky-400);
+  color: var(--color-bg);
+}
+
+/* ─── Reusable Animations ───────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--color-sky-400);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 18px var(--color-sky-400), 0 0 30px rgba(56, 189, 248, 0.4);
+    opacity: 0.7;
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes floatSlowReverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.15); }
+  50% { box-shadow: 0 0 35px rgba(56, 189, 248, 0.3); }
 }

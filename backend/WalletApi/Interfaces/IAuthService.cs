@@ -8,6 +8,9 @@ public interface IAuthService
     Task<RegisterUserResponseDto> RegisterAsync(RegisterUserRequestDto request);
     Task<IReadOnlyList<DocumentTypeDto>> GetDocumentTypesAsync();
 
+    Task<FirstLoginVerifyResponseDto> VerifyFirstLoginEligibilityAsync(FirstLoginVerifyRequestDto request);
+    Task<bool> SetFirstLoginPasswordAsync(FirstLoginSetPasswordRequestDto request);
+
 //Agregado de mas-------------------------------------------------------------
     Task RevokeSessionsAsync(int userId);
 }

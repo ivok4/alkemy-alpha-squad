@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Card,
-  CardContent,
   Typography,
   TextField,
   Button,
@@ -197,255 +195,248 @@ export default function RegisterForm({ onToggleLogin }) {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', my: 3 }}>
-      <Card
-        elevation={4}
-        sx={{
-          borderRadius: 3,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-          border: '1px solid rgba(0, 147, 220, 0.15)',
-        }}
-      >
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Box
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 56,
-                height: 56,
-                borderRadius: '50%',
-                bgcolor: 'primary.main',
-                color: 'white',
-                mb: 1.5,
-              }}
-            >
-              <PersonAddOutlined sx={{ fontSize: 32 }} />
-            </Box>
-            <Typography variant="h5" component="h2" fontWeight="bold" color="primary">
-              Crear Cuenta en DigitalArs
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Regístrate para obtener tu cuenta en pesos con Alias y CVU listos para operar
-            </Typography>
-          </Box>
+    <Box>
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 56,
+            height: 56,
+            borderRadius: '14px',
+            bgcolor: 'rgba(56, 189, 248, 0.12)',
+            mb: 1.5,
+          }}
+        >
+          <PersonAddOutlined sx={{ fontSize: 28, color: '#38bdf8' }} />
+        </Box>
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{ fontWeight: 700, color: '#f3f4f6' }}
+        >
+          Crear Cuenta en DigitalArs
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#9ca3af', mt: 0.5 }}>
+          Regístrate para obtener tu cuenta en pesos con Alias y CVU listos para operar
+        </Typography>
+      </Box>
 
-          <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: 3, borderColor: 'rgba(255,255,255,0.06)' }} />
 
-          {serverError && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setServerError('')}>
-              {serverError}
-            </Alert>
-          )}
+      {serverError && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setServerError('')}>
+          {serverError}
+        </Alert>
+      )}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <Grid container spacing={2}>
-              {/* First Name */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  id="firstName"
-                  label="Nombre"
-                  variant="outlined"
-                  value={formData.firstName}
-                  onChange={handleChange('firstName')}
-                  onBlur={handleBlur('firstName')}
-                  error={touched.firstName && Boolean(errors.firstName)}
-                  helperText={touched.firstName && errors.firstName}
-                  disabled={loading}
-                  required
-                />
-              </Grid>
+      <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Grid container spacing={2}>
+          {/* First Name */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              id="firstName"
+              label="Nombre"
+              variant="outlined"
+              value={formData.firstName}
+              onChange={handleChange('firstName')}
+              onBlur={handleBlur('firstName')}
+              error={touched.firstName && Boolean(errors.firstName)}
+              helperText={touched.firstName && errors.firstName}
+              disabled={loading}
+              required
+            />
+          </Grid>
 
-              {/* Last Name */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  id="lastName"
-                  label="Apellido"
-                  variant="outlined"
-                  value={formData.lastName}
-                  onChange={handleChange('lastName')}
-                  onBlur={handleBlur('lastName')}
-                  error={touched.lastName && Boolean(errors.lastName)}
-                  helperText={touched.lastName && errors.lastName}
-                  disabled={loading}
-                  required
-                />
-              </Grid>
+          {/* Last Name */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              id="lastName"
+              label="Apellido"
+              variant="outlined"
+              value={formData.lastName}
+              onChange={handleChange('lastName')}
+              onBlur={handleBlur('lastName')}
+              error={touched.lastName && Boolean(errors.lastName)}
+              helperText={touched.lastName && errors.lastName}
+              disabled={loading}
+              required
+            />
+          </Grid>
 
-              {/* Document Type */}
-              <Grid size={{ xs: 12, sm: 5 }}>
-                <FormControl fullWidth variant="outlined" disabled={loading}>
-                  <InputLabel id="documentType-label">Tipo de Doc.</InputLabel>
-                  <Select
-                    labelId="documentType-label"
-                    id="documentTypeId"
-                    value={formData.documentTypeId}
-                    label="Tipo de Doc."
-                    onChange={handleChange('documentTypeId')}
-                  >
-                    {documentTypes.map((type) => (
-                      <MenuItem key={type.id} value={type.id}>
-                        {type.code} - {type.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Document Number */}
-              <Grid size={{ xs: 12, sm: 7 }}>
-                <TextField
-                  fullWidth
-                  id="documentNumber"
-                  label="Número de Documento"
-                  variant="outlined"
-                  placeholder={selectedDocType.code === 'DNI' ? 'Ej: 38123456' : 'Ej: ABC123456'}
-                  value={formData.documentNumber}
-                  onChange={handleChange('documentNumber')}
-                  onBlur={handleBlur('documentNumber')}
-                  error={touched.documentNumber && Boolean(errors.documentNumber)}
-                  helperText={
-                    (touched.documentNumber && errors.documentNumber) ||
-                    (selectedDocType.code === 'DNI' ? '7 u 8 dígitos numéricos' : 'Formato alfanumérico')
-                  }
-                  disabled={loading}
-                  required
-                />
-              </Grid>
-
-              {/* Email */}
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  id="email"
-                  type="email"
-                  label="Correo Electrónico"
-                  variant="outlined"
-                  placeholder="ejemplo@correo.com"
-                  value={formData.email}
-                  onChange={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  error={touched.email && Boolean(errors.email)}
-                  helperText={touched.email && errors.email}
-                  disabled={loading}
-                  required
-                />
-              </Grid>
-
-              {/* Password */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  label="Contraseña"
-                  variant="outlined"
-                  value={formData.password}
-                  onChange={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                  disabled={loading}
-                  required
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="alternar visibilidad de contraseña"
-                            onClick={() => setShowPassword(!showPassword)}
-                            edge="end"
-                            size="small"
-                          >
-                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Grid>
-
-              {/* Confirm Password */}
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  label="Confirmar Contraseña"
-                  variant="outlined"
-                  value={formData.confirmPassword}
-                  onChange={handleChange('confirmPassword')}
-                  onBlur={handleBlur('confirmPassword')}
-                  error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                  helperText={touched.confirmPassword && errors.confirmPassword}
-                  disabled={loading}
-                  required
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="alternar visibilidad de confirmar contraseña"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            edge="end"
-                            size="small"
-                          >
-                            {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Submit Button */}
-            <Box sx={{ mt: 3.5 }}>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={loading}
-                sx={{
-                  py: 1.4,
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 12px rgba(7, 79, 150, 0.25)',
-                }}
+          {/* Document Type */}
+          <Grid size={{ xs: 12, sm: 5 }}>
+            <FormControl fullWidth variant="outlined" disabled={loading}>
+              <InputLabel id="documentType-label">Tipo de Doc.</InputLabel>
+              <Select
+                labelId="documentType-label"
+                id="documentTypeId"
+                value={formData.documentTypeId}
+                label="Tipo de Doc."
+                onChange={handleChange('documentTypeId')}
               >
-                {loading ? <CircularProgress size={26} color="inherit" /> : 'Registrarme y Crear Cuenta'}
-              </Button>
-            </Box>
+                {documentTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.id}>
+                    {type.code} - {type.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-            {onToggleLogin && (
-              <>
-                <Divider sx={{ my: 2.5 }} />
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    ¿Ya tienes una cuenta registrada?{' '}
-                    <Button
-                      variant="text"
-                      color="primary"
-                      onClick={onToggleLogin}
-                      sx={{ fontWeight: 'bold', textTransform: 'none', p: 0, minWidth: 0 }}
-                    >
-                      Inicia sesión aquí
-                    </Button>
-                  </Typography>
-                </Box>
-              </>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+          {/* Document Number */}
+          <Grid size={{ xs: 12, sm: 7 }}>
+            <TextField
+              fullWidth
+              id="documentNumber"
+              label="Número de Documento"
+              variant="outlined"
+              placeholder={selectedDocType.code === 'DNI' ? 'Ej: 38123456' : 'Ej: ABC123456'}
+              value={formData.documentNumber}
+              onChange={handleChange('documentNumber')}
+              onBlur={handleBlur('documentNumber')}
+              error={touched.documentNumber && Boolean(errors.documentNumber)}
+              helperText={
+                (touched.documentNumber && errors.documentNumber) ||
+                (selectedDocType.code === 'DNI' ? '7 u 8 dígitos numéricos' : 'Formato alfanumérico')
+              }
+              disabled={loading}
+              required
+            />
+          </Grid>
+
+          {/* Email */}
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              id="email"
+              type="email"
+              label="Correo Electrónico"
+              variant="outlined"
+              placeholder="ejemplo@correo.com"
+              value={formData.email}
+              onChange={handleChange('email')}
+              onBlur={handleBlur('email')}
+              error={touched.email && Boolean(errors.email)}
+              helperText={touched.email && errors.email}
+              disabled={loading}
+              required
+            />
+          </Grid>
+
+          {/* Password */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              label="Contraseña"
+              variant="outlined"
+              value={formData.password}
+              onChange={handleChange('password')}
+              onBlur={handleBlur('password')}
+              error={touched.password && Boolean(errors.password)}
+              helperText={touched.password && errors.password}
+              disabled={loading}
+              required
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="alternar visibilidad de contraseña"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        size="small"
+                        sx={{ color: '#9ca3af' }}
+                      >
+                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+          </Grid>
+
+          {/* Confirm Password */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              label="Confirmar Contraseña"
+              variant="outlined"
+              value={formData.confirmPassword}
+              onChange={handleChange('confirmPassword')}
+              onBlur={handleBlur('confirmPassword')}
+              error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+              helperText={touched.confirmPassword && errors.confirmPassword}
+              disabled={loading}
+              required
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="alternar visibilidad de confirmar contraseña"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        edge="end"
+                        size="small"
+                        sx={{ color: '#9ca3af' }}
+                      >
+                        {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+          </Grid>
+        </Grid>
+
+        {/* Submit Button */}
+        <Box sx={{ mt: 3.5 }}>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled={loading}
+            sx={{
+              py: 1.4,
+              fontSize: '1rem',
+              fontWeight: 700,
+            }}
+          >
+            {loading ? <CircularProgress size={26} color="inherit" /> : 'Registrarme y Crear Cuenta'}
+          </Button>
+        </Box>
+
+        {onToggleLogin && (
+          <>
+            <Divider sx={{ my: 2.5, borderColor: 'rgba(255,255,255,0.06)' }} />
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                ¿Ya tienes una cuenta registrada?{' '}
+                <Button
+                  variant="text"
+                  color="primary"
+                  onClick={onToggleLogin}
+                  sx={{ fontWeight: 700, textTransform: 'none', p: 0, minWidth: 0 }}
+                >
+                  Inicia sesión aquí
+                </Button>
+              </Typography>
+            </Box>
+          </>
+        )}
+      </Box>
 
       {/* Success Modal */}
       <RegistrationSuccessModal

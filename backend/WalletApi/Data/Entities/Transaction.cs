@@ -12,8 +12,8 @@ public class Transaction
     public virtual Account Account { get; set; } = null!;
     public decimal Amount { get; set; }
     
-    // "debit" o "credit"
-    public string Type { get; set; } = string.Empty; 
+    // Tipo de movimiento fuertemente tipado
+    public TransactionType Type { get; set; } 
     public string Description { get; set; } = string.Empty;
     // Contraparte: la otra cuenta involucrada en la transferencia
     public int? CounterpartAccountId { get; set; }

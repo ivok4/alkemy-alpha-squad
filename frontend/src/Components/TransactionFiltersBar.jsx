@@ -1,29 +1,40 @@
-import Box from "@mui/material/Box";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Stack,
+} from "@mui/material";
 
 function TransactionFiltersBar({ handleChange, filters, handleFilterChange }) {
   return (
-    <Box
-      sx={{
-        minWidth: 200,
-        width: { xs: "95vw", sm: "80vw", md: "50vw" },
-        display: "flex",
-        justifyContent: "space-between",
-      }}
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={2}
+      sx={{ width: "100%" }}
     >
-      <FormControl sx={{ width: "50%" }}>
-        <InputLabel id="demo-simple-select-label">
-          Tipo de movimiento
-        </InputLabel>
+      <FormControl
+        sx={{
+          flex: 1,
+          "& .MuiOutlinedInput-root": {
+            bgcolor: "rgba(255, 255, 255, 0.03)",
+            backdropFilter: "blur(8px)",
+            "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+            "&:hover fieldset": { borderColor: "rgba(56, 189, 248, 0.3)" },
+          },
+          "& .MuiInputLabel-root": { color: "#9ca3af" },
+          "& .MuiSelect-select": { color: "#f3f4f6" },
+        }}
+      >
+        <InputLabel id="filter-type-label">Tipo de movimiento</InputLabel>
         <Select
           name="type"
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
+          labelId="filter-type-label"
+          id="filter-type"
           value={filters.type}
-          label="Todas"
+          label="Tipo de movimiento"
           onChange={(e) => handleChange(e)}
         >
           <MenuItem value={"all"}>Todas</MenuItem>
@@ -31,38 +42,31 @@ function TransactionFiltersBar({ handleChange, filters, handleFilterChange }) {
           <MenuItem value={"recived"}>Transferencia</MenuItem>
         </Select>
       </FormControl>
-      <Box
-        sx={{ width: "50%", display: "flex", justifyContent: "end" }}
-      >
-        <input
-          type="date"
-          name="fechaDesde"
-          value={filters.fechaDesde}
-          onChange={handleFilterChange}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            height: "100%",
-            width: "40%",
-          }}
-        />
-        <input
-          type="date"
-          name="fechaHasta"
-          value={filters.fechaHasta}
-          onChange={handleFilterChange}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            height: "100%",
-            marginLeft: "0.5rem",
-            width: "40%",
-          }}
-        />
-      </Box>
-    </Box>
+
+      <TextField
+        type="date"
+        name="fechaDesde"
+        label="Desde"
+        value={filters.fechaDesde || ""}
+        onChange={handleFilterChange}
+        slotProps={{
+          inputLabel: { shrink: true },
+        }}
+        sx={{ flex: 1 }}
+      />
+
+      <TextField
+        type="date"
+        name="fechaHasta"
+        label="Hasta"
+        value={filters.fechaHasta || ""}
+        onChange={handleFilterChange}
+        slotProps={{
+          inputLabel: { shrink: true },
+        }}
+        sx={{ flex: 1 }}
+      />
+    </Stack>
   );
 }
 

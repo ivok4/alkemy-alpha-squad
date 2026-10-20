@@ -1,0 +1,665 @@
+{
+  "info": {
+    "_postman_id": "8f5b4e3a-d6c1-4b77-9a88-wallet-api-v1",
+    "name": "DigitalArs Wallet API - Colección Oficial",
+    "description": "Colección completa de pruebas para la API de Billetera Virtual DigitalArs (.NET 10). Cubre flujos de Autenticación, Cuentas, Depósitos, Transferencias, Historial, Notificaciones, Administración y Manejo Unificado de Errores.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01. Autenticación (Auth)",
+      "item": [
+        {
+          "name": "01. Obtener Tipos de Documento",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/document-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "document-types"]
+            },
+            "description": "Obtiene la lista de tipos de documento válidos (DNI, Pasaporte) para el registro."
+          }
+        },
+        {
+          "name": "02. Registro de Usuario (Self-Registration)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Juan\",\n  \"lastName\": \"Pérez\",\n  \"email\": \"juan.perez@test.com\",\n  \"password\": \"ClaveSegura123!\",\n  \"documentTypeId\": 1,\n  \"documentNumber\": \"38123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "register"]
+            },
+            "description": "Registra un nuevo usuario en la billetera y genera automáticamente su cuenta con Alias y CVU únicos."
+          }
+        },
+        {
+          "name": "03. Login Usuario Estándar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.token) {",
+                  "    pm.environment.set(\"token\", jsonData.token);",
+                  "    pm.environment.set(\"userId\", jsonData.userId);",
+                  "    console.log(\"Token de usuario guardado:\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "login"]
+            },
+            "description": "Inicia sesión con usuario estándar y almacena automáticamente el token JWT en la variable de entorno {{token}}."
+          }
+        },
+        {
+          "name": "04. Login Administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.token) {",
+                  "    pm.environment.set(\"adminToken\", jsonData.token);",
+                  "    pm.environment.set(\"token\", jsonData.token);",
+                  "    console.log(\"Token de admin guardado:\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "login"]
+            },
+            "description": "Inicia sesión con credenciales de Administrador para endpoints protegidos por rol."
+          }
+        },
+        {
+          "name": "05. Verificar Elegibilidad Primer Ingreso",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nuevo.usuario@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/first-login/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "first-login", "verify"]
+            },
+            "description": "Verifica si un usuario creado por admin debe configurar su contraseña inicial."
+          }
+        },
+        {
+          "name": "06. Establecer Contraseña de Primer Ingreso",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nuevo.usuario@test.com\",\n  \"documentNumber\": \"38123456\",\n  \"newPassword\": \"NuevaClaveSegura123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/first-login/set-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "first-login", "set-password"]
+            },
+            "description": "Establece la contraseña definitiva para un usuario en su primer ingreso."
+          }
+        },
+        {
+          "name": "07. Cerrar Sesión (Logout y Revocación de Tokens)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "logout"]
+            },
+            "description": "Revoca la sesión del usuario actualizando su SecurityStamp."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Cuentas y Saldo (Account)",
+      "item": [
+        {
+          "name": "01. Consultar Saldo y Datos de Cuenta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Account/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Account", "balance"]
+            },
+            "description": "Obtiene el balance actual, moneda, Alias y CVU del usuario autenticado."
+          }
+        },
+        {
+          "name": "02. Obtener Mi Cuenta (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Account/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Account", "me"]
+            },
+            "description": "Endpoint alternativo para obtener información completa de la cuenta propia."
+          }
+        },
+        {
+          "name": "03. Realizar Depósito de Fondos",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 15000.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Account/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Account", "deposit"]
+            },
+            "description": "Acredita fondos en la cuenta del usuario autenticado y genera automáticamente una notificación de depósito."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Transferencias y Movimientos (Transactions)",
+      "item": [
+        {
+          "name": "01. Buscar Destinatario por Alias o CVU",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions/lookup?destination={{destinationAlias}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions", "lookup"],
+              "query": [
+                { "key": "destination", "value": "{{destinationAlias}}" }
+              ]
+            },
+            "description": "Valida y consulta el nombre y datos del destinatario antes de transferir."
+          }
+        },
+        {
+          "name": "02. Realizar Transferencia",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{destinationAlias}}\",\n  \"amount\": 2500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions", "transfer"]
+            },
+            "description": "Ejecuta una transferencia atómica (débito en origen y crédito en destino) y notifica a ambos usuarios."
+          }
+        },
+        {
+          "name": "03. Historial de Transacciones (Paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions?pagina=1&porPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions"],
+              "query": [
+                { "key": "pagina", "value": "1" },
+                { "key": "porPagina", "value": "10" }
+              ]
+            },
+            "description": "Obtiene los movimientos del usuario autenticado ordenados cronológicamente."
+          }
+        },
+        {
+          "name": "04. Historial - Filtrar por Débitos (Enviadas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions?tipo=debit&pagina=1&porPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions"],
+              "query": [
+                { "key": "tipo", "value": "debit" },
+                { "key": "pagina", "value": "1" },
+                { "key": "porPagina", "value": "10" }
+              ]
+            },
+            "description": "Filtra transacciones emitidas (débito)."
+          }
+        },
+        {
+          "name": "05. Historial - Filtrar por Créditos (Recibidas y Depósitos)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions?tipo=credit&pagina=1&porPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions"],
+              "query": [
+                { "key": "tipo", "value": "credit" },
+                { "key": "pagina", "value": "1" },
+                { "key": "porPagina", "value": "10" }
+              ]
+            },
+            "description": "Filtra transacciones recibidas y depósitos (crédito)."
+          }
+        },
+        {
+          "name": "06. Historial - Filtrar por Rango de Fechas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions?fechaDesde=2026-09-01T00:00:00Z&fechaHasta=2026-09-30T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions"],
+              "query": [
+                { "key": "fechaDesde", "value": "2026-09-01T00:00:00Z" },
+                { "key": "fechaHasta", "value": "2026-09-30T23:59:59Z" }
+              ]
+            },
+            "description": "Filtra transacciones ocurridas dentro de un intervalo temporal."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Notificaciones (Notifications)",
+      "item": [
+        {
+          "name": "01. Obtener Notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Obtiene la lista de notificaciones del usuario ordenadas con la más reciente primero."
+          }
+        },
+        {
+          "name": "02. Conteo de Notificaciones No Leídas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications", "unread-count"]
+            },
+            "description": "Devuelve la cantidad de notificaciones pendientes de lectura para la badge (9+)."
+          }
+        },
+        {
+          "name": "03. Marcar Notificación como Leída",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications", "1", "read"]
+            },
+            "description": "Marca una notificación específica como leída al hacer clic sobre ella."
+          }
+        },
+        {
+          "name": "04. Marcar Todas como Leídas",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications", "read-all"]
+            },
+            "description": "Marca todas las notificaciones pendientes del usuario como leídas."
+          }
+        },
+        {
+          "name": "05. Eliminar Notificación Individual",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications", "1"]
+            },
+            "description": "Elimina una notificación específica de la bandeja del usuario."
+          }
+        },
+        {
+          "name": "06. Vaciar Todas las Notificaciones",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Notifications"]
+            },
+            "description": "Elimina todas las notificaciones del usuario autenticado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Administración de Usuarios (Admin)",
+      "item": [
+        {
+          "name": "01. Listar Usuarios Paginados (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/User?pagina=1&porPagina=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User"],
+              "query": [
+                { "key": "pagina", "value": "1" },
+                { "key": "porPagina", "value": "10" }
+              ]
+            },
+            "description": "Lista paginada de todos los usuarios registrados (exclusivo para rol Administrador)."
+          }
+        },
+        {
+          "name": "02. Obtener Detalle de Usuario por ID (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/User/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User", "1"]
+            },
+            "description": "Obtiene los detalles completos de un usuario específico incluyendo cuenta y roles."
+          }
+        },
+        {
+          "name": "03. Crear Usuario por Administrador",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Carlos\",\n  \"lastName\": \"Gómez\",\n  \"email\": \"carlos.gomez@test.com\",\n  \"documentTypeId\": 1,\n  \"documentNumber\": \"30111222\",\n  \"role\": \"Usuario\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/User",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User"]
+            },
+            "description": "Crea una cuenta para un usuario desde el panel de administración con flag de primer login."
+          }
+        },
+        {
+          "name": "04. Actualizar Usuario por Administrador",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Carlos Alberto\",\n  \"lastName\": \"Gómez\",\n  \"email\": \"carlos.gomez@test.com\",\n  \"documentTypeId\": 1,\n  \"documentNumber\": \"30111222\",\n  \"role\": \"Usuario\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/User/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User", "1"]
+            },
+            "description": "Modifica datos de perfil y rol de un usuario."
+          }
+        },
+        {
+          "name": "05. Cambiar Estado de Usuario (Activar/Desactivar)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/User/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User", "1", "status"]
+            },
+            "description": "Bloquea o desbloquea el acceso de un usuario a la billetera."
+          }
+        },
+        {
+          "name": "06. Eliminar Usuario (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/User/999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User", "999"]
+            },
+            "description": "Elimina un usuario del sistema."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Pruebas de Manejo de Errores (RFC 7807)",
+      "item": [
+        {
+          "name": "01. Error 400 - Validación de Modelo (Campos Vacíos)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Auth", "login"]
+            },
+            "description": "Verifica que el error devuelva ValidationProblemDetails con errorCode: VALIDATION_ERROR y detalle por campo."
+          }
+        },
+        {
+          "name": "02. Error 400 - Fondos Insuficientes (INSUFFICIENT_FUNDS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{destinationAlias}}\",\n  \"amount\": 999999999.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions", "transfer"]
+            },
+            "description": "Verifica la respuesta estandarizada ante saldo insuficiente con errorCode: INSUFFICIENT_FUNDS."
+          }
+        },
+        {
+          "name": "03. Error 401 - Petición sin Token JWT",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Account/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Account", "balance"]
+            },
+            "description": "Verifica que el acceso anónimo a un endpoint protegido devuelva 401 Unauthorized."
+          }
+        },
+        {
+          "name": "04. Error 403 - Acceso Denegado (No es Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/User",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "User"]
+            },
+            "description": "Verifica que un usuario estándar no pueda acceder a endpoints de administración (403 Forbidden)."
+          }
+        },
+        {
+          "name": "05. Error 404 - Destinatario Inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Transactions/lookup?destination=alias.totalmente.inexistente",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "Transactions", "lookup"],
+              "query": [
+                { "key": "destination", "value": "alias.totalmente.inexistente" }
+              ]
+            },
+            "description": "Verifica que al buscar un Alias o CVU que no existe se devuelva 404 Not Found con errorCode: NOT_FOUND."
+          }
+        }
+      ]
+    }
+  ]
+}

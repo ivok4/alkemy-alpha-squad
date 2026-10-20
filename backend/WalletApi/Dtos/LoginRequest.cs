@@ -12,4 +12,3 @@ namespace WalletApi.Dtos
         public string Password { get; set; }
     }
 }
-

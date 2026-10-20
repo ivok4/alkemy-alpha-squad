@@ -99,6 +99,62 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred during registration. Please try again later." });
         }
     }
+        [HttpPost("first-login/verify")]
+        [ProducesResponseType(typeof(FirstLoginVerifyResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyFirstLogin([FromBody] FirstLoginVerifyRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await _authService.VerifyFirstLoginEligibilityAsync(request);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar primer ingreso para {Email}.", request.Email);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Ocurrió un error al verificar el usuario." });
+            }
+        }
+
+        [HttpPost("first-login/set-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SetFirstLoginPassword([FromBody] FirstLoginSetPasswordRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _authService.SetFirstLoginPasswordAsync(request);
+                return Ok(new { message = "Contraseña establecida con éxito. Ahora puedes iniciar sesión con tus credenciales." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al establecer contraseña de primer ingreso para {Email}.", request.Email);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Ocurrió un error al establecer la contraseña." });
+            }
+        }
+
         [HttpPost("logout")]
         [Authorize]//Se puede quitar, es para que solo el usuario registrado pueda desloguearse
         public async Task<IActionResult> Logout()

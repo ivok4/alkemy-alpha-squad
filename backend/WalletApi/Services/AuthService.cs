@@ -53,6 +53,50 @@ public class AuthService : IAuthService
         // Aquí sí existe _userManager:
         await _userManager.UpdateSecurityStampAsync(user);
     }
+
+    public async Task<FirstLoginVerifyResponseDto> VerifyFirstLoginEligibilityAsync(FirstLoginVerifyRequestDto request)
+    {
+        var email = request.Email.Trim();
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null || !user.IsActive || !user.DebeCambiarPassword)
+        {
+            throw new InvalidOperationException("El correo ingresado no tiene un primer ingreso pendiente o no existe.");
+        }
+
+        return new FirstLoginVerifyResponseDto
+        {
+            Email = user.Email ?? email,
+            FirstName = user.FirstName,
+            LastName = user.LastName
+        };
+    }
+
+    public async Task<bool> SetFirstLoginPasswordAsync(FirstLoginSetPasswordRequestDto request)
+    {
+        var email = request.Email.Trim();
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null || !user.IsActive || !user.DebeCambiarPassword)
+        {
+            throw new InvalidOperationException("El correo ingresado no tiene un primer ingreso pendiente o no existe.");
+        }
+
+        // Set password hasheada
+        user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, request.Password);
+        user.DebeCambiarPassword = false;
+        user.EmailConfirmed = true;
+        user.SecurityStamp = Guid.NewGuid().ToString();
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            var errors = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+            throw new ArgumentException($"Error al establecer la contraseña: {errors}");
+        }
+
+        return true;
+    }
     //Agregado de mas-------------------------------------------------------------
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
@@ -83,9 +127,12 @@ public class AuthService : IAuthService
         {
             UserId = user.Id.ToString(),
             Email = user.Email ?? "",
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             Message = "Login exitoso",
             Token = token,
-            expiresAt = DateTime.UtcNow.AddMinutes(60).ToString("o")
+            expiresAt = DateTime.UtcNow.AddMinutes(60).ToString("o"),
+            Roles = roles.ToList()
         };
     }
 

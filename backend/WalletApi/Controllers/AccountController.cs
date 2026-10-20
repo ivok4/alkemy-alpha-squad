@@ -95,6 +95,51 @@ public class AccountController : ControllerBase
         }
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> ObtenerMiCuenta()
+    {
+        return await GetBalance();
+    }
+
+    [HttpPut("alias")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateAlias([FromBody] UpdateAliasDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var userId = GetUserId();
+        if (userId == null)
+        {
+            return Unauthorized(new { message = "No se pudo identificar al usuario." });
+        }
+
+        try
+        {
+            await _accountService.UpdateAliasAsync(userId.Value, request.Alias);
+            return Ok(new { message = "Alias actualizado correctamente." });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Alias validation error for user {UserId}: {Message}", userId, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Alias not found/error for user {UserId}: {Message}", userId, ex.Message);
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating alias for user {UserId}.", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { message = "Ocurrió un error al actualizar el alias." });
+        }
+    }
     private int? GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -105,10 +150,4 @@ public class AccountController : ControllerBase
         return userId;
     }
 
-
-    [HttpGet("me")]
-    public async Task<IActionResult> ObtenerMiCuenta()
-    {
-        return await GetBalance();
-    }
 }

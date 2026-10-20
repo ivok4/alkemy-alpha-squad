@@ -16,5 +16,6 @@ public class User : IdentityUser<int>
 
     public virtual DocumentType? DocumentType { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool DebeCambiarPassword { get; set; } = false;
     public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 }

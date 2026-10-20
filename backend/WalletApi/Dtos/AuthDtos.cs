@@ -49,3 +49,32 @@ public class DocumentTypeDto
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
 }
+
+public class FirstLoginVerifyRequestDto
+{
+    [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+    [EmailAddress(ErrorMessage = "Formato de correo electrónico inválido.")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class FirstLoginVerifyResponseDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+}
+
+public class FirstLoginSetPasswordRequestDto
+{
+    [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+    [EmailAddress(ErrorMessage = "Formato de correo electrónico inválido.")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La contraseña es obligatoria.")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres.")]
+    public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La confirmación de contraseña es obligatoria.")]
+    [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}

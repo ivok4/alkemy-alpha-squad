@@ -13,6 +13,18 @@ internal sealed class BearerSecuritySchemeTransformer(
         OpenApiDocumentTransformerContext context,
         CancellationToken cancellationToken)
     {
+        document.Info = new OpenApiInfo
+        {
+            Title = "DigitalArs Wallet API",
+            Version = "v1",
+            Description = "API REST integral para la billetera virtual DigitalArs (.NET 10). Incluye autenticación JWT, gestión de cuentas, depósitos, transferencias atómicas, historial de transacciones, notificaciones y administración de usuarios.",
+            Contact = new OpenApiContact
+            {
+                Name = "Equipo Alkemy Alpha Squad",
+                Email = "soporte@digitalars.com"
+            }
+        };
+
         var schemes = await authenticationSchemeProvider.GetAllSchemesAsync();
 
         if (!schemes.Any(scheme => scheme.Name == "Bearer"))

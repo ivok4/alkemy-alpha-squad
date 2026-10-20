@@ -10,4 +10,5 @@ public interface IAccountService
     Task<TransferResponseDto> TransferAsync(int userId, TransferRequestDto request);
     Task<List<TransactionDto>> GetTransactionsAsync(int userId, int page = 1, int pageSize = 20);
     Task<AccountResponseDto> EnsureAccountForUserAsync(int userId);
+    Task UpdateAliasAsync(int userId, string newAlias);
 }

@@ -3,6 +3,7 @@ using WalletApi.Data.Entities;
 using WalletApi.Dtos;
 using WalletApi.Models;
 using WalletApi.Interfaces;
+using WalletApi.Exceptions;
 
 namespace WalletApi.Services;
 
@@ -11,15 +12,18 @@ public class AccountService : IAccountService
     private readonly WalletContext _context;
     private readonly IAliasGeneratorService _aliasGenerator;
     private readonly ICvuGeneratorService _cvuGenerator;
+    private readonly INotificationService _notificationService;
 
     public AccountService(
         WalletContext context,
         IAliasGeneratorService aliasGenerator,
-        ICvuGeneratorService cvuGenerator)
+        ICvuGeneratorService cvuGenerator,
+        INotificationService notificationService)
     {
         _context = context;
         _aliasGenerator = aliasGenerator;
         _cvuGenerator = cvuGenerator;
+        _notificationService = notificationService;
     }
 
     // 1. DEPÓSITO DE DINERO
@@ -35,6 +39,12 @@ public class AccountService : IAccountService
             throw new ArgumentException("El importe debe ser mayor a cero.");
         }
 
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || !user.IsActive)
+        {
+            throw new InvalidOperationException("El usuario se encuentra inactivo y no puede realizar depósitos.");
+        }
+
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.UserId == userId);
 
@@ -46,13 +56,25 @@ public class AccountService : IAccountService
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            account.Balance += request.Amount;
+            // 1. Incremento atómico directo en SQL Server (Previene condiciones de carrera)
+            var filasAfectadas = await _context.Accounts
+                .Where(a => a.Id == account.Id)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(
+                    a => a.Balance,
+                    a => a.Balance + request.Amount
+                ));
+
+            if (filasAfectadas == 0)
+            {
+                throw new InvalidOperationException("No se pudo actualizar el saldo. La cuenta pudo haber sido eliminada o modificada simultáneamente.");
+            }
 
             var tx = new Transaction
             {
                 AccountId = account.Id,
                 Amount = request.Amount,
-                Type = "credit", // Criterio: Genera un movimiento de crédito registrado con fecha
+                CounterpartAccountId = null,
+                Type = TransactionType.Deposit, // Criterio: Genera un movimiento de depósito registrado con fecha
                 Description = "Depósito de dinero",
                 CreatedAt = DateTime.UtcNow
             };
@@ -61,11 +83,28 @@ public class AccountService : IAccountService
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
+            try
+            {
+                await _notificationService.CreateNotificationAsync(
+                    userId,
+                    "Depósito exitoso",
+                    $"Se acreditaron ${request.Amount:N2} en tu cuenta.",
+                    "deposit",
+                    tx.Id
+                );
+            }
+            catch
+            {
+                // No interrumpir la respuesta si falla la notificación
+            }
+
+            var newBalance = account.Balance + request.Amount;
+
             return new DepositResponseDto
             {
                 TransactionId = tx.Id,
                 Amount = request.Amount,
-                NewBalance = account.Balance,
+                NewBalance = newBalance,
                 Date = tx.CreatedAt,
                 Message = "Depósito realizado con éxito."
             };
@@ -167,7 +206,7 @@ public class AccountService : IAccountService
 
         if (sourceAccount.Balance < request.Amount)
         {
-            throw new InvalidOperationException("Saldo insuficiente para realizar la transferencia.");
+            throw new InsufficientFundsException("Saldo insuficiente para realizar la transferencia.");
         }
 
         var trimmed = request.Destination?.Trim() ?? string.Empty;
@@ -205,20 +244,20 @@ public class AccountService : IAccountService
             var debitoExitoso = await _context.Accounts
                 .Where(a => a.Id == sourceAccount.Id && a.Balance >= request.Amount)
                 .ExecuteUpdateAsync(setter => setter.SetProperty(
-                    a => a.Balance, 
+                    a => a.Balance,
                     a => a.Balance - request.Amount
                 ));
 
             if (debitoExitoso == 0)
             {
-                throw new InvalidOperationException("Saldo insuficiente o la cuenta fue modificada simultáneamente.");
+                throw new InsufficientFundsException("Saldo insuficiente o la cuenta fue modificada simultáneamente.");
             }
 
             // 2. Crédito atómico en Destino
             await _context.Accounts
                 .Where(a => a.Id == targetAccount.Id)
                 .ExecuteUpdateAsync(setter => setter.SetProperty(
-                    a => a.Balance, 
+                    a => a.Balance,
                     a => a.Balance + request.Amount
                 ));
 
@@ -232,7 +271,7 @@ public class AccountService : IAccountService
                 AccountId = sourceAccount.Id,
                 CounterpartAccountId = targetAccount.Id,
                 Amount = request.Amount,
-                Type = "debit",
+                Type = TransactionType.Debit,
                 Description = $"Transferencia enviada a {destFullName}",
                 CreatedAt = now
             };
@@ -244,7 +283,7 @@ public class AccountService : IAccountService
                 AccountId = targetAccount.Id,
                 CounterpartAccountId = sourceAccount.Id,
                 Amount = request.Amount,
-                Type = "credit",
+                Type = TransactionType.Credit,
                 Description = $"Transferencia recibida de {sourceFullName}",
                 CreatedAt = now,
                 RelatedTransactionId = debitTx.Id
@@ -257,6 +296,31 @@ public class AccountService : IAccountService
 
             // 4. Confirmación de toda la operación
             await transaction.CommitAsync();
+
+            try
+            {
+                // Notificación para el emisor
+                await _notificationService.CreateNotificationAsync(
+                    userId,
+                    "Transferencia enviada",
+                    $"Enviaste ${request.Amount:N2} a {destFullName}.",
+                    "transfer_sent",
+                    debitTx.Id
+                );
+
+                // Notificación para el destinatario
+                await _notificationService.CreateNotificationAsync(
+                    targetAccount.UserId,
+                    "Transferencia recibida",
+                    $"Recibiste ${request.Amount:N2} de {sourceFullName}.",
+                    "transfer_received",
+                    creditTx.Id
+                );
+            }
+            catch
+            {
+                // No interrumpir la respuesta si falla la notificación
+            }
 
             var nuevoSaldo = sourceAccount.Balance - request.Amount;
 
@@ -299,7 +363,7 @@ public class AccountService : IAccountService
                 Id = t.Id,
                 AccountId = t.AccountId,
                 Amount = t.Amount,
-                Type = t.Type,
+                Type = t.Type.ToString(),
                 Description = t.Description,
                 Date = t.CreatedAt,
                 CounterpartAccountId = t.CounterpartAccountId,
@@ -331,7 +395,7 @@ public class AccountService : IAccountService
         var account = new Account
         {
             UserId = userId,
-            Balance = 10000m,
+            Balance = 0m,
             Currency = "ARS",
             Alias = alias,
             Cvu = cvu,
@@ -350,6 +414,27 @@ public class AccountService : IAccountService
             Cvu = account.Cvu,
             CreatedAt = account.CreatedAt
         };
+    }
+
+    public async Task UpdateAliasAsync(int userId, string newAlias)
+    {
+        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
+
+        if (account == null)
+        {
+            throw new InvalidOperationException("Cuenta no encontrada.");
+        }
+
+        bool aliasEnUso = await _context.Accounts
+            .AnyAsync(a => a.Alias == newAlias && a.Id != account.Id);
+
+        if (aliasEnUso)
+        {
+            throw new ArgumentException("El alias ingresado ya se encuentra en uso por otra cuenta.");
+        }
+
+        account.Alias = newAlias;
+        await _context.SaveChangesAsync();
     }
 
     // Helper privado para formato de destino

@@ -24,8 +24,22 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const msg = error.response.data?.message || "";
+      if (msg.includes("inactivo") || msg.includes("desactivada")) {
+        sessionStorage.setItem(
+          "auth_notice",
+          JSON.stringify({
+            message: "Tu cuenta ha sido desactivada por un administrador. Comunícate con soporte.",
+            type: "DEACTIVATED",
+          })
+        );
+      }
+
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userData");
+
       if (window.location.pathname !== "/auth" && window.location.pathname !== "/") {
         window.location.href = "/auth";
       }

@@ -36,6 +36,29 @@ export const accountService = {
     });
     return response.data;
   },
+  /**
+   * * Obtener los datos del perfil del usuario autenticado.
+   * @returns {Promise<{nombre: string, apellido: string, email: string, tipoDocumento: string, numeroDocumento: string, alias: string, cvu: string, estado: string}>}
+   */
+  async getProfile() {
+    const response = await api.get("/profile/me", {
+      headers: authHeader(),
+    });
+    return response.data;
+  },
+  async updateUserProfile(userData) {
+    const response = await api.put("/profile/me", userData, {
+      headers: authHeader(),
+    });
+    return response.data;
+  },
+
+  async updateAlias(aliasData) {
+    const response = await api.put(`/account/alias`, aliasData, {
+      headers: authHeader(),
+    });
+    return response.data;
+  },
 
   /**
    * Check recipient information by Alias or CVU before transferring.
@@ -60,7 +83,7 @@ export const accountService = {
     const response = await api.post(
       "/transactions/transfer",
       { destination, amount },
-      { headers: authHeader() }
+      { headers: authHeader() },
     );
     return response.data;
   },
